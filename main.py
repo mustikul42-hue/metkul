@@ -11,11 +11,9 @@ def main(page: ft.Page):
     page.padding = 12
     page.scroll = "adaptive"
 
-    # --- UI ELEMANLARI ---
     title_text = ft.Text("METKUL", size=28, weight="bold", italic=True, color="#ffb300")
     ent_city = ft.TextField(label="Lokasyon Girişi", value="Bornova", expand=True)
     
-    # Blok 1: Hava Rejimi Tahmini
     lbl_card1_val = ft.Text("Veri Bekleniyor...", size=14, color="white")
     card_status = ft.Container(
         content=ft.Column([
@@ -25,7 +23,6 @@ def main(page: ft.Page):
         padding=15, bgcolor="#1a1a1a"
     )
 
-    # Blok 2: MetPy Seviyeleri
     lbl_card2_val = ft.Text("LCL: --\nCCL: --\nCAPE: --\nCIN: --\nLI: --", size=13)
     card_metpy = ft.Container(
         content=ft.Column([
@@ -35,7 +32,6 @@ def main(page: ft.Page):
         padding=15, bgcolor="#1a1a1a"
     )
 
-    # Blok 3: Saatlik Trend Paneli (Yağış duruyor, Nem ve CAPE eklendi)
     trend_container = ft.Container(
         content=ft.Column([
             ft.Text("Mevcut Saatten İtibaren 24 Saatlik Akış", size=14, weight="bold", color="#00ff00"),
@@ -44,12 +40,10 @@ def main(page: ft.Page):
         padding=15, bgcolor="#1a1a1a"
     )
 
-    # Blok 4: Sayısal Matris ve Ekstrem Rapor
     txt_numeric_summary = ft.TextField(multiline=True, read_only=True, min_lines=4, max_lines=6, text_size=12)
     txt_numeric_table = ft.TextField(multiline=True, read_only=True, min_lines=26, text_size=11)
     txt_extreme_report = ft.TextField(multiline=True, read_only=True, min_lines=15, text_size=12, color="#00ff00", bgcolor="#0a0a0a")
 
-    # --- METEOROLOJİK MATRİS HESAPLAMALARI ---
     def calculate_extreme_probabilities(t, rh, td, ws_kmh, cape_val, li_val):
         probs = {}
         t_td_diff = t - td
@@ -151,16 +145,15 @@ def main(page: ft.Page):
             cin_val = float(int(rh_val * 1.5)) if cape_val == 0 else max(0.0, float(150.0 - (cape_val / 10.0)))
 
             if li_val < 0 or cape_val > 250:
-                status_text = f"📍 {location_name.upper()}\nLI ({li_val:.1f}) Negatif. CAPE Aktif.\nKonvektif kararsızlık YÜKSEK! Cb bulutları fırtına riski."
+                status_text = f"📍 {location_name.upper()}\nLI ({li_val:.1f}) Negatif. CAPE Aktif.\nKonvektif kararsızlık YÜKSEK! Fırtına riski."
             elif (t_val - td_val) <= 3:
                 status_text = f"📍 {location_name.upper()}\nStabil atmosfer (LI: {li_val:.1f}).\nNem yüksek, sis/alçak bulutlanma beklentisi."
             else:
-                status_text = f"📍 {location_name.upper()}\nStabil atmosfer (LI: {li_val:.1f}).\nSakin ve kararlı bir hava regime."
+                status_text = f"📍 {location_name.upper()}\nStabil atmosfer (LI: {li_val:.1f}).\nSakin ve kararlı bir hava rejimi."
             
             lbl_card1_val.value = status_text
             lbl_card2_val.value = f"LCL Yükseklik: {lcl_height_m:.0f} m\nCCL Yükseklik: {ccl_text}\nAnlık CAPE: {cape_val:.0f} J/kg\nAnlık CIN: {cin_val:.0f} J/kg\nLifted Index (LI): {li_val:.1f}"
 
-            # --- SAATLİK TREND ALANI (YAĞIŞ KORUNDU + NEM & CAPE ENTEGRASYONU) ---
             hourly = w_res["hourly"]
             current_time_str = current["time"]
             
@@ -178,9 +171,9 @@ def main(page: ft.Page):
                 t_display = dt_obj.strftime("%H:%M")
                 
                 h_t = hourly["temperature_2m"][i]
-                h_pop = hourly["precipitation_probability"][i] # Yağış olasılığı yerinde duruyor
-                h_rh = hourly["relative_humidity_2m"][i]       # Nem
-                h_cape = hourly.get("cape", [0.0]*72)[i]       # CAPE
+                h_pop = hourly["precipitation_probability"][i]
+                h_rh = hourly["relative_humidity_2m"][i]
+                h_cape = hourly.get("cape", [0.0]*72)[i]
                 
                 trend_controls.append(
                     ft.Row([
@@ -193,7 +186,6 @@ def main(page: ft.Page):
                 )
             trend_container.content = ft.Column(trend_controls)
 
-            # Sayısal Matris Çıktıları
             num_summary = f"📍 {location_name.upper()}\nBasınç: {p_val:.1f} hPa | LCL: {lcl_height_m:.1f}m\nCAPE: {cape_val} J/kg | LI: {li_val:.2f}\nSıcaklık: {t_val}°C | Nem: %{rh_val} | Çiğ N.: {td_val}°C"
             txt_numeric_summary.value = num_summary
 
@@ -205,7 +197,6 @@ def main(page: ft.Page):
                 forecast_table += f"{t_display:<6}{f'{hourly['temperature_2m'][i]:.1f}':<6}{f'{hourly['relative_humidity_2m'][i]}':<5}{f'{hourly['dew_point_2m'][i]:.1f}':<6}{f'{hourly['precipitation_probability'][i]}':<8}{f'{hourly.get('cape', [0.0]*72)[i]:.0f}':<6}\n"
             txt_numeric_table.value = forecast_table
 
-            # Ekstrem Blok Çıktıları
             ext_probs = calculate_extreme_probabilities(t_val, rh_val, td_val, ws_val, cape_val, li_val)
             report = f"🛑 EKSTREM OLAY RAPORU\n📍 {location_name.upper()}\n\n"
             for name, prob in ext_probs.items():
@@ -213,8 +204,8 @@ def main(page: ft.Page):
                 report += f"• {name}:\n  %{prob} -> {status}\n\n"
             txt_extreme_report.value = report
 
-        except Exception as e:
-            lbl_card1_val.value = f"Hata oluştu: {str(e)}"
+        except Exception as ex:
+            lbl_card1_val.value = f"Hata oluştu: {str(ex)}"
 
         finally:
             btn_analyze.disabled = False
@@ -223,9 +214,8 @@ def main(page: ft.Page):
 
     btn_analyze = ft.ElevatedButton("VERİLERİ ÇEK & ANALİZ ET", on_click=process_weather_data, bgcolor="#ffb300", color="black")
 
-    # --- KILÇIKSIZ DOĞRUSAL DÜZEN ---
     page.add(
-        ft.Row([title_text], alignment="center"),
+        ft.Row([title_text], alignment=ft.MainAxisAlignment.CENTER),
         ft.Row([ent_city, btn_analyze]),
         ft.Container(height=10),
         card_status,
@@ -240,7 +230,7 @@ def main(page: ft.Page):
         ft.Container(height=10),
         ft.Text("⚠️ EKSTREM TAHMİN RAPORU:", weight="bold", color="#ff4444"),
         txt_extreme_report
-# Kodu internet sunucusuna uyumlu hale getiren başlatma komutu
+    )
+
 if __name__ == "__main__":
     ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=8000)
-)
