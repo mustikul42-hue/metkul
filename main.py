@@ -240,7 +240,6 @@ def main(page: ft.Page):
         ft.Container(height=10),
         ft.Text("⚠️ EKSTREM TAHMİN RAPORU:", weight="bold", color="#ff4444"),
         txt_extreme_report
-    )
 # Kodu internet sunucusuna uyumlu hale getiren başlatma komutu
 if __name__ == "__main__":
     ft.app(target=main, view=ft.AppView.WEB_BROWSER, port=8000)
